@@ -11,6 +11,7 @@ import time
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.data_fetcher import DataFetcher
 from utils.db_manager import DatabaseManager
+from utils.db_initializer import DatabaseInitializer
 
 class TestDataFetcher(unittest.TestCase):
     @classmethod
@@ -31,7 +32,7 @@ class TestDataFetcher(unittest.TestCase):
         if not os.path.exists(cls.test_config_path):
             raise FileNotFoundError(f"测试配置文件不存在: {cls.test_config_path}")
         
-        # 初始化测试数据库（只在类初始化时创建一次）
+        # 清空测试数据库（只在类初始化时执行一次）
         cls.initialize_test_db()
         
         # 初始化数据库管理器和数据获取器（类级别）
@@ -40,32 +41,11 @@ class TestDataFetcher(unittest.TestCase):
     
     @classmethod
     def initialize_test_db(cls):
-        """使用与history.db相同的结构初始化测试数据库"""
-        # 创建新的数据库连接
-        conn = sqlite3.connect(cls.test_db_path)
-        cursor = conn.cursor()
-        
-        # 使用与history.db相同的结构创建daily_data表
-        create_table_sql = """
-        CREATE TABLE IF NOT EXISTS daily_data (
-            trade_date TEXT NOT NULL,
-            ts_code TEXT NOT NULL,
-            open REAL,
-            high REAL,
-            low REAL,
-            close REAL,
-            vol REAL,
-            amount REAL,
-            PRIMARY KEY (trade_date, ts_code)
-        );
-        """
-        cursor.execute(create_table_sql)
-        
-        # 清空表数据
-        cursor.execute("DELETE FROM daily_data")
-        
-        conn.commit()
-        conn.close()
+        """清空测试数据库中的数据"""
+        with sqlite3.connect(cls.test_db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM daily_data")
+            conn.commit()
     
     def tearDown(self):
         """每个测试之后清理环境"""
