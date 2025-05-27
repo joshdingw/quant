@@ -2,7 +2,15 @@ import tushare as ts
 import pandas as pd
 import yaml
 from typing import Optional, Tuple
-from db_manager import DatabaseManager
+import os
+import sys
+
+# Add parent directory to path if running directly
+if __name__ == "__main__":
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from utils.db_manager import DatabaseManager
+else:
+    from .db_manager import DatabaseManager
 
 class TushareLoader:
     def __init__(self, config_path: str = '../Config/config.yaml'):

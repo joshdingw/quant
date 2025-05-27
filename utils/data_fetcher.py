@@ -1,8 +1,17 @@
 import pandas as pd
 import numpy as np
 from typing import Optional, Tuple
-from db_manager import DatabaseManager
-from tushare_loader import TushareLoader
+import os
+import sys
+
+# Add parent directory to path if running directly
+if __name__ == "__main__":
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from utils.db_manager import DatabaseManager
+    from utils.tushare_loader import TushareLoader
+else:
+    from .db_manager import DatabaseManager
+    from .tushare_loader import TushareLoader
 
 class DataFetcher:
     def __init__(self, config_path: str = '../Config/config.yaml'):
