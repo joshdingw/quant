@@ -26,7 +26,6 @@ class TushareLoader:
         
         # Initialize Tushare
         ts.set_token(self.config['tushare_token'])
-        self.pro = ts.pro_api()
         
         # Set default date range
         self.start_date = self.config.get('start_date', '20240101')
@@ -48,7 +47,7 @@ class TushareLoader:
         """
         try:
             # 调用Tushare的交易日历接口
-            df = self.pro.trade_cal(exchange='SSE', start_date=start_date, end_date=end_date)
+            df = ts.pro_api().trade_cal(exchange='SSE', start_date=start_date, end_date=end_date)
             if df.empty:
                 raise ValueError(f"无法获取交易日历: {start_date} 到 {end_date}")
             
@@ -82,12 +81,20 @@ class TushareLoader:
             end = end_date or self.end_date
             
             # Download data
-            df = self.pro.daily(ts_code=ts_code, start_date=start, end_date=end)
+            df = ts.pro_bar(ts_code=ts_code, start_date=start, end_date=end, adj=None)
             if df.empty:
                 return False, f"❌ 没有获取到数据: {ts_code}", pd.DataFrame()
             
+            # 获取复权因子
+            adj_factors = self.get_adj_factor(ts_code, start, end)
+
+            # 合并复权因子
+            df = df.merge(adj_factors, on=['trade_date', 'ts_code'], how='left')
+
+            # 更新列选择以包括 adj_factor
+            df = df[["trade_date", "ts_code", "open", "high", "low", "close", "vol", "amount", "adj_factor"]]
+            
             df = df.sort_values("trade_date")
-            df = df[["trade_date", "ts_code", "open", "high", "low", "close", "vol", "amount"]]
             
             new_records = []
             
@@ -110,6 +117,7 @@ class TushareLoader:
                             "close": round(float(existing[5]), 6),
                             "vol": round(float(existing[6]), 6),
                             "amount": round(float(existing[7]), 6),
+                            "adj_factor": round(float(existing[8]), 6)
                         }
                         
                         mem_row = {
@@ -119,6 +127,7 @@ class TushareLoader:
                             "close": round(float(row["close"]), 6),
                             "vol": round(float(row["vol"]), 6),
                             "amount": round(float(row["amount"]), 6),
+                            "adj_factor": round(float(row["adj_factor"]), 6)
                         }
                         
                         if db_row != mem_row:
@@ -136,6 +145,15 @@ class TushareLoader:
                 
         except Exception as e:
             return False, f"❌ 错误：{str(e)}", pd.DataFrame()
+
+    def get_adj_factor(self, ts_code: str, start_date: str, end_date: str) -> pd.DataFrame:
+        """
+        获取复权因子
+        """
+        df = ts.pro_api().adj_factor(ts_code=ts_code, start_date=start_date, end_date=end_date)
+        if df.empty:
+            raise ValueError(f"无法获取复权因子: {ts_code}")
+        return df
 
 # Example usage
 if __name__ == "__main__":

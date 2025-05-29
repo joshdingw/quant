@@ -49,6 +49,7 @@ class DatabaseInitializer:
                 close REAL,
                 vol REAL,
                 amount REAL,
+                adj_factor REAL,
                 PRIMARY KEY (trade_date, ts_code)
             );
             """
