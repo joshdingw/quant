@@ -71,7 +71,7 @@ class DataFetcher:
                 return False
         
         # 检查数据质量
-        required_columns = ['open', 'high', 'low', 'close', 'vol', 'amount']
+        required_columns = ['open', 'high', 'low', 'close', 'vol', 'amount', 'adj_factor']
         if not all(col in df.columns for col in required_columns):
             return False
             

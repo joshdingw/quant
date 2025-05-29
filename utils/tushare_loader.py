@@ -87,6 +87,8 @@ class TushareLoader:
             
             # 获取复权因子
             adj_factors = self.get_adj_factor(ts_code, start, end)
+            if adj_factors.empty:
+                return False, f"❌ 没有获取到复权因子: {ts_code}", pd.DataFrame()
 
             # 合并复权因子
             df = df.merge(adj_factors, on=['trade_date', 'ts_code'], how='left')
