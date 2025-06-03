@@ -39,7 +39,7 @@ class DatabaseInitializer:
         # 创建数据库连接
         with sqlite3.connect(db_path) as conn:
             # 创建daily_data表
-            create_table_sql = """
+            create_daily_data_sql = """
             CREATE TABLE IF NOT EXISTS daily_data (
                 trade_date TEXT NOT NULL,
                 ts_code TEXT NOT NULL,
@@ -53,7 +53,20 @@ class DatabaseInitializer:
                 PRIMARY KEY (trade_date, ts_code)
             );
             """
-            conn.execute(create_table_sql)
+            conn.execute(create_daily_data_sql)
+            
+            # 创建moneyflow_data表
+            create_moneyflow_data_sql = """
+            CREATE TABLE IF NOT EXISTS moneyflow_data (
+                trade_date TEXT NOT NULL,
+                ts_code TEXT NOT NULL,
+                buy_elg_amount REAL,
+                buy_elg_vol REAL,
+                PRIMARY KEY (trade_date, ts_code)
+            );
+            """
+            conn.execute(create_moneyflow_data_sql)
+            
             conn.commit()
             
             print(f"✅ 数据库 {os.path.basename(db_path)} 初始化完成")
